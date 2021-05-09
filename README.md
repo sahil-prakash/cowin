@@ -2,4 +2,5 @@ Python script to make api calls at fixed intervals to cowin api to query for ope
 
 NOTE: Notification works only on Mac OS.
 
-* Execute command "python cowin.py" to execute the script
+* Install requests if needed ```python -m pip install requests```
+* Execute command ```python cowin.py``` to execute the script
