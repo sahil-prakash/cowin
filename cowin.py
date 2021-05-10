@@ -17,7 +17,7 @@ while(1):
     if day < 10:
         day = '0' + str(day)
     else:
-        month = str(month)
+        day = str(day)
 
     if month < 10:
         month = '0' + str(month)
