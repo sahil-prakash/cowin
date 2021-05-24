@@ -3,12 +3,15 @@ import requests
 from datetime import date
 import time
 
-queryPinCode = 208017 # Pin code to query
+queryPinCodes = [209217, 208017] # Pin code to query
 queryAgeLimit = 18 # Age limit to query. Values - 18 or 45
 minimumCapacityRequired = 1 # Number of minimum available slots for which notification is to be fired. For example, if minimumCapacityRequired = 5, and a center does not have atleast 5 slots available, notification won't be fired
-
+counter = 0
 while(1):
     time.sleep(5)
+
+    counter = counter + 1
+    print ('Attempt ' + str(counter))
 
     today = date.today()
     day = today.day
@@ -24,30 +27,32 @@ while(1):
     else:
         month = str(month)
 
-    print (day)
-    print (month)
+    for pinCode in queryPinCodes:
+        URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=" + str(pinCode) + "&date=" + day + "-" + month + "-2021"
+        headers = {'User-Agent': 'Postman', 'Accept-Language': 'en_IN', 'accept': 'application/json'}
 
+        # sending get request and saving the response as response object
+        r = requests.get(url = URL, headers = headers)
 
+        # extracting data in json format
+        data = r.json()
 
-    URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode=" + str(queryPinCode) + "&date=" + day + "-" + month + "-2021"
-    headers = {'User-Agent': 'Postman', 'Accept-Language': 'en_IN', 'accept': 'application/json'}
+        print (data)
 
-    # sending get request and saving the response as response object
-    r = requests.get(url = URL, headers = headers)
+        centers = data['centers']
 
-    print(r)
+        found = 0
 
-    # extracting data in json format
-    data = r.json()
+        for center in centers:
+            sessions = center['sessions']
+            for session in sessions:
+                capacity = session['available_capacity']
+                ageLimit = session['min_age_limit']
+                if (ageLimit == queryAgeLimit and capacity >= minimumCapacityRequired):
+                    found = 1
+                    subprocess.call(['osascript', '-e' , 'display notification "Check and book vaccine slot" with title "Vaccine slot(s) available"'])
 
-    print (data)
-
-    centers = data['centers']
-
-    for center in centers:
-        sessions = center['sessions']
-        for session in sessions:
-            capacity = session['available_capacity']
-            ageLimit = session['min_age_limit']
-            if (ageLimit == queryAgeLimit and capacity >= minimumCapacityRequired):
-                subprocess.call(['osascript', '-e' , 'display notification "Check and book vaccine slot" with title "Vaccine slot(s) available"'])
+        if (found == 1):
+            print ('Found slots for pin code ' + str(pinCode))
+        else:
+            print ('Slots not found for pin code ' + str(pinCode))
